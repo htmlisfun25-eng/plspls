@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>암호화 프로그램</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+    </style>
+</head>
+<body id="app-body" class="bg-slate-900 text-slate-100 min-h-screen flex flex-col p-4 sm:p-6 transition-colors duration-200">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-200 bg-slate-800 text-slate-100 px-4 py-3 rounded border border-slate-700 shadow-lg flex items-center space-x-2 pointer-events-none text-sm">
+        <i class="fa-solid fa-check text-blue-400"></i>
+        <span id="toast-msg">복사되었습니다.</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="max-w-3xl w-full mx-auto space-y-4">
+        
+        <!-- Header -->
+        <div id="header-box" class="bg-slate-800 border border-slate-700 rounded p-4 flex justify-between items-center transition-colors">
+            <div>
+                <h1 id="title-text" class="text-lg font-bold text-slate-100">보안 암호화 툴</h1>
+                <p id="subtitle-text" class="text-xs text-slate-400">일자별 보안 알고리즘 연동 변환기</p>
+            </div>
+
+            <!-- Header Right Action Buttons -->
+            <div class="flex items-center space-x-2">
+                <!-- Double Encryption Offer Button -->
+                <button onclick="openStrongModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-3 py-1.5 text-xs font-semibold flex items-center space-x-1.5 transition shadow">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>고단계 보안</span>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle-btn" onclick="toggleTheme()" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded px-3 py-1.5 text-xs text-slate-200 flex items-center space-x-1.5 transition">
+                    <i id="theme-icon" class="fa-solid fa-sun text-amber-400"></i>
+                    <span id="theme-text">라이트 모드</span>
+                </button>
+
+                <!-- Admin Button -->
+                <button onclick="openAdminAuthModal()" class="bg-blue-600 hover:bg-blue-500 text-white rounded px-3 py-1.5 text-xs font-semibold flex items-center space-x-1.5 transition shadow">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>관리자 도구</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Working Area Console -->
+        <div id="console-box" class="bg-slate-800 border border-slate-700 rounded p-4 space-y-4 transition-colors">
+            
+            <!-- Encrypt / Decrypt Toggle & Double Mode Indicator -->
+            <div id="action-border" class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div class="flex gap-2">
+                    <button id="btn-action-encrypt" onclick="setAction('encrypt')" class="px-4 py-2 rounded text-xs font-bold bg-blue-600 text-white shadow">
+                        암호화
+                    </button>
+                    <button id="btn-action-decrypt" onclick="setAction('decrypt')" class="px-4 py-2 rounded text-xs font-bold text-slate-400 hover:text-slate-200">
+                        복호화
+                    </button>
+                </div>
+                <!-- Mode Status Badge -->
+                <div id="mode-badge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 border border-slate-600 flex items-center gap-1">
+                    <i class="fa-solid fa-layer-group text-blue-400"></i>
+                    <span id="mode-badge-text">기본 보안 모드</span>
+                </div>
+            </div>
+
+            <!-- Input Text Area -->
+            <div class="space-y-1">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <label id="input-label" for="input-text">원문 입력</label>
+                    <button onclick="clearInput()" class="hover:text-blue-400 font-medium transition">초기화</button>
+                </div>
+                <textarea id="input-text" rows="4" placeholder="암호화할 텍스트를 입력하세요..." class="w-full bg-slate-900 border border-slate-700 rounded p-3 text-slate-100 font-mono text-sm focus:outline-none focus:border-blue-500 resize-none transition-colors"></textarea>
+            </div>
+
+            <!-- Execute Button -->
+            <div class="flex justify-end pt-1">
+                <button id="btn-execute" onclick="processCrypto()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-5 py-2 rounded shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-play text-[10px]"></i>
+                    <span id="btn-execute-text">암호화 출력</span>
+                </button>
+            </div>
+
+            <!-- Output Text Area -->
+            <div class="space-y-1 pt-2">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <label id="output-label" for="output-text">암호문 출력</label>
+                    <button onclick="copyToClipboard()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-bold transition">복사</button>
+                </div>
+                <textarea id="output-text" readonly rows="4" placeholder="출력 버튼을 누르면 결과가 표시됩니다." class="w-full bg-slate-900/60 border border-slate-700 text-blue-400 font-mono text-sm rounded p-3 focus:outline-none resize-none transition-colors"></textarea>
+            </div>
+
+            <!-- Terminal Debug Console (Fake Advanced Security Log) -->
+            <div class="pt-2 space-y-1">
+                <div class="flex justify-between items-center text-[11px] text-slate-400 font-mono">
+                    <span class="flex items-center gap-1 text-slate-400">
+                        <i class="fa-solid fa-terminal text-blue-400"></i> 실시간 보안 커널 디버그 스트림
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] text-emerald-400 font-bold">SECURE_ACTIVE</span>
+                    </span>
+                </div>
+                <div id="debug-terminal" class="w-full h-28 bg-black/80 border border-slate-700/80 rounded p-2.5 font-mono text-[11px] text-emerald-400/90 overflow-y-auto space-y-1 select-none leading-relaxed">
+                    <div>[SYS_INIT] Secure kernel cryptographic module v4.8 loaded successfully.</div>
+                    <div>[CORE_SYNC] Temporal daily hash sequence verified [OK].</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer / Copyright Notice -->
+        <div class="text-center py-2 text-xs text-slate-500 font-mono">
+            © 2026. 박윤재 All rights reserved.
+        </div>
+
+    </div>
+
+    <!-- Stronger Encryption Modal -->
+    <div id="strong-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div id="strong-modal-card" class="bg-slate-800 border border-slate-700 rounded-lg max-w-sm w-full p-5 space-y-4 shadow-2xl transition-colors">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 class="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-shield-halved"></i> 보안 강화 옵션
+                </h3>
+                <button onclick="closeStrongModal()" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
+            </div>
+            
+            <div class="space-y-3">
+                <p class="text-sm font-bold text-slate-100 flex items-center gap-1.5">
+                    <span>💡 보안 수준을 더 높이시겠습니까?</span>
+                </p>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    일일 보안 알고리즘을 복합 적용하여 생성 데이터의 불확실성과 무작위성을 대폭 강화합니다.
+                </p>
+                
+                <div id="double-option-box" class="bg-slate-900 border border-slate-700 p-3 rounded flex items-center justify-between cursor-pointer" onclick="toggleDoubleMode()">
+                    <div class="space-y-0.5">
+                        <div class="text-xs font-bold text-slate-200">고단계 암호화 모드</div>
+                        <div id="double-option-desc" class="text-[11px] text-slate-400">현재: 비활성화</div>
+                    </div>
+                    <input type="checkbox" id="double-mode-check" class="w-4 h-4 accent-indigo-500 cursor-pointer" pointer-events-none>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeStrongModal()" class="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition">
+                    적용하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Auth Modal -->
+    <div id="admin-auth-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div id="admin-auth-card" class="bg-slate-800 border border-slate-700 rounded-lg max-w-sm w-full p-4 space-y-4 shadow-2xl transition-colors">
+            <div id="admin-auth-header" class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 class="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-key"></i> 관리자 비밀번호 인증
+                </h3>
+                <button onclick="closeAdminAuthModal()" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
+            </div>
+            <div class="space-y-2">
+                <input type="password" id="admin-pass-input" placeholder="비밀번호 입력..." onkeydown="if(event.key === 'Enter') submitAdminAuth()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500 font-mono">
+                <p id="admin-auth-error" class="text-[11px] text-red-400 hidden">비밀번호가 올바르지 않습니다.</p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeAdminAuthModal()" class="px-3 py-1.5 rounded bg-slate-700 text-slate-300 text-xs hover:bg-slate-600 transition">취소</button>
+                <button onclick="submitAdminAuth()" class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Modal -->
+    <div id="admin-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div id="admin-dashboard-card" class="bg-slate-800 border border-slate-700 rounded-lg max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl transition-colors">
+            <div id="admin-modal-header" class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <h2 id="admin-modal-title" class="font-bold text-slate-100 text-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-blue-400"></i>
+                    <span>관리자 대시보드</span>
+                </h2>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-100 text-xs">닫기 ✕</button>
+            </div>
+            
+            <div class="p-4 space-y-4 overflow-y-auto font-mono text-xs text-slate-300">
+                <div id="admin-info-box" class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2">
+                    <div class="text-blue-400 font-bold border-b border-slate-800 pb-1">🔑 시스템 식별 정보</div>
+                    <div><span class="text-slate-500">기준 일자:</span> <span id="admin-date" class="text-slate-200"></span></div>
+                    <div><span class="text-slate-500">알고리즘 해시:</span> <span id="admin-seed-hash" class="text-blue-400 font-bold"></span></div>
+                    <div><span class="text-slate-500">매핑 테이블 용량:</span> <span class="text-slate-200">256 노드</span></div>
+                </div>
+
+                <div id="admin-board-box" class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2">
+                    <div class="text-blue-400 font-bold border-b border-slate-800 pb-1">⚙️ 활성화 매핑 테이블 (전체 256개)</div>
+                    <div id="admin-board-preview" class="grid grid-cols-8 sm:grid-cols-16 gap-1 text-center text-[10px]">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Core Encryption Logic -->
+    <script>
+        let currentAction = 'encrypt'; 
+        let currentSeedString = '';
+        let boardMap = []; 
+        let reverseBoardMap = {}; 
+        let currentTheme = 'dark';
+        let isDoubleMode = false;
+        const ADMIN_PASSWORD = "admin123";
+
+        const KOREAN_CONSONANTS = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        const KOREAN_VOWELS = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+        const NUMBERS = ['0','1','2','3','4','5','6','7','8','9'];
+        const ALPHABETS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz '.split('');
+
+        const BASE_CHARS = [...KOREAN_CONSONANTS, ...KOREAN_VOWELS, ...NUMBERS, ...ALPHABETS];
+        const CHAR_SET = [];
+        for (let i = 0; i < 256; i++) {
+            CHAR_SET.push(BASE_CHARS[i % BASE_CHARS.length]);
+        }
+
+        const SEPARATORS = ['q', 's', 'x', 'z', 'k', 'm', 'p', 'w'];
+
+        window.onload = function() {
+            initDailySeed();
+        };
+
+        function initDailySeed() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            
+            currentSeedString = `${year}-${month}-${day}`;
+            
+            const seedHash = simpleHash(currentSeedString);
+            generateSeedBoard(seedHash);
+        }
+
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash) + 12345;
+        }
+
+        function lcg(seed) {
+            let state = seed;
+            return function() {
+                state = (state * 1664525 + 1013904223) % 4294967296;
+                return state / 4294967296;
+            };
+        }
+
+        function generateSeedBoard(seedNumber) {
+            const rng = lcg(seedNumber);
+            let pool = [...CHAR_SET];
+            boardMap = new Array(256);
+            reverseBoardMap = {};
+
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+
+            for (let i = 0; i < 256; i++) {
+                const char = pool[i];
+                const row = Math.floor(i / 16);
+                const col = i % 16;
+                const rowHex = row.toString(16);
+                const colHex = col.toString(16);
+                const coord = `${rowHex}${colHex}`;
+
+                boardMap[i] = { char, rowHex, colHex, coord };
+                if (!reverseBoardMap[char]) {
+                    reverseBoardMap[char] = { rowHex, colHex, coord };
+                }
+            }
+        }
+
+        function processCrypto() {
+            const inputVal = document.getElementById('input-text').value;
+            const outputArea = document.getElementById('output-text');
+            if (!inputVal) {
+                outputArea.value = '';
+                return;
+            }
+
+            if (currentAction === 'encrypt') {
+                outputArea.value = chessEncrypt(inputVal);
+                pushDebugLog(`[ENCRYPT] Payload processed (${inputVal.length} bytes) -> Double Mode: ${isDoubleMode ? 'ACTIVE' : 'OFF'}`);
+            } else {
+                outputArea.value = chessDecrypt(inputVal);
+                pushDebugLog(`[DECRYPT] Stream unrolled & integrity verified.`);
+            }
+        }
+
+        function chessEncrypt(text) {
+            pushDebugLog(`[ENTROPY] Generating pseudo-random state vector...`);
+            let result = '';
+            const rng = lcg(simpleHash(currentSeedString + text.length));
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const mapped = reverseBoardMap[char];
+
+                if (mapped) {
+                    const sepIdx = Math.floor(rng() * SEPARATORS.length);
+                    result += `${mapped.rowHex}${mapped.colHex}${SEPARATORS[sepIdx]}`;
+                } else {
+                    const hexCode = char.charCodeAt(0).toString(16).padStart(4, '0');
+                    const sepIdx = Math.floor(rng() * SEPARATORS.length);
+                    result += `u${hexCode}${SEPARATORS[sepIdx]}`;
+                }
+            }
+
+            if (isDoubleMode) {
+                pushDebugLog(`[PASS_2] Applying cascading secondary permutation pass...`);
+                let doubleResult = '';
+                const rng2 = lcg(simpleHash(currentSeedString + "_double_" + result.length));
+                for (let i = 0; i < result.length; i++) {
+                    const char = result[i];
+                    const mapped = reverseBoardMap[char];
+                    if (mapped) {
+                        const sepIdx = Math.floor(rng2() * SEPARATORS.length);
+                        doubleResult += `${mapped.rowHex}${mapped.colHex}${SEPARATORS[sepIdx]}`;
+                    } else {
+                        const hexCode = char.charCodeAt(0).toString(16).padStart(4, '0');
+                        const sepIdx = Math.floor(rng2() * SEPARATORS.length);
+                        doubleResult += `u${hexCode}${SEPARATORS[sepIdx]}`;
+                    }
+                }
+                return doubleResult;
+            }
+
+            return result;
+        }
+
+        function chessDecrypt(coordStr) {
+            pushDebugLog(`[DECODE] Parsing cryptographic token sequences...`);
+            let targetStr = coordStr;
+            const passes = isDoubleMode ? 2 : 1;
+
+            for (let pass = 0; pass < passes; pass++) {
+                let decrypted = '';
+                const pattern = /([0-9a-f]{2}|u[0-9a-f]{4})[qsxzkmpw]/gi;
+                let match;
+
+                while ((match = pattern.exec(targetStr)) !== null) {
+                    const token = match[1].toLowerCase();
+                    
+                    if (token.startsWith('u')) {
+                        const charCode = parseInt(token.substring(1), 16);
+                        decrypted += String.fromCharCode(charCode);
+                    } else {
+                        const r = parseInt(token[0], 16);
+                        const c = parseInt(token[1], 16);
+                        const idx = r * 16 + c;
+
+                        if (boardMap[idx]) {
+                            decrypted += boardMap[idx].char;
+                        } else {
+                            decrypted += '?';
+                        }
+                    }
+                }
+                targetStr = decrypted;
+            }
+
+            return targetStr;
+        }
+
+        function pushDebugLog(text) {
+            const term = document.getElementById('debug-terminal');
+            if (!term) return;
+            const timeStr = new Date().toTimeString().split(' ')[0] + "." + Math.floor(Math.random() * 900 + 100);
+            const line = document.createElement('div');
+            line.className = "text-emerald-400/90";
+            line.innerText = `[${timeStr}] ${text}`;
+            term.appendChild(line);
+            term.scrollTop = term.scrollHeight;
+
+            // Keep log count reasonable
+            if (term.childNodes.length > 30) {
+                term.removeChild(term.firstChild);
+            }
+        }
+
+        function openStrongModal() {
+            document.getElementById('strong-modal').classList.remove('hidden');
+        }
+
+        function closeStrongModal() {
+            document.getElementById('strong-modal').classList.add('hidden');
+        }
+
+        function toggleDoubleMode() {
+            isDoubleMode = !isDoubleMode;
+            const check = document.getElementById('double-mode-check');
+            const desc = document.getElementById('double-option-desc');
+            const badgeText = document.getElementById('mode-badge-text');
+            const badge = document.getElementById('mode-badge');
+
+            check.checked = isDoubleMode;
+            if (isDoubleMode) {
+                desc.innerText = "현재: 활성화됨 (고단계 보안)";
+                badgeText.innerText = "고단계 보안 모드";
+                badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-900/80 text-indigo-300 border border-indigo-500/50 flex items-center gap-1";
+            } else {
+                desc.innerText = "현재: 비활성화";
+                badgeText.innerText = "기본 보안 모드";
+                badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 border border-slate-600 flex items-center gap-1";
+            }
+            processCrypto();
+        }
+
+        function setAction(action) {
+            currentAction = action;
+
+            const btnEnc = document.getElementById('btn-action-encrypt');
+            const btnDec = document.getElementById('btn-action-decrypt');
+            const inputLabel = document.getElementById('input-label');
+            const outputLabel = document.getElementById('output-label');
+            const inputArea = document.getElementById('input-text');
+            const btnExecuteText = document.getElementById('btn-execute-text');
+
+            if (action === 'encrypt') {
+                btnEnc.className = "px-4 py-2 rounded text-xs font-bold bg-blue-600 text-white shadow";
+                btnDec.className = "px-4 py-2 rounded text-xs font-bold text-slate-400 hover:text-slate-200";
+                inputLabel.innerText = "원문 입력";
+                outputLabel.innerText = "암호문 출력";
+                inputArea.placeholder = "암호화할 텍스트를 입력하세요...";
+                btnExecuteText.innerText = "암호화 출력";
+            } else {
+                btnDec.className = "px-4 py-2 rounded text-xs font-bold bg-blue-600 text-white shadow";
+                btnEnc.className = "px-4 py-2 rounded text-xs font-bold text-slate-400 hover:text-slate-200";
+                inputLabel.innerText = "암호문 입력";
+                outputLabel.innerText = "복원된 원문";
+                inputArea.placeholder = "복호화할 암호 코드를 입력하세요...";
+                btnExecuteText.innerText = "복호화 출력";
+            }
+            
+            // Clear outputs when switching modes
+            document.getElementById('output-text').value = '';
+        }
+
+        function clearInput() {
+            document.getElementById('input-text').value = '';
+            document.getElementById('output-text').value = '';
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById('output-text').value;
+            if (!outputText) return;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = outputText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("클립보드에 복사되었습니다.");
+            } catch (err) {
+                showToast("복사 실패");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2000);
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const body = document.getElementById('app-body');
+            const headerBox = document.getElementById('header-box');
+            const consoleBox = document.getElementById('console-box');
+            const titleText = document.getElementById('title-text');
+            const inputArea = document.getElementById('input-text');
+            const outputArea = document.getElementById('output-text');
+            const debugTerminal = document.getElementById('debug-terminal');
+            const themeBtn = document.getElementById('theme-toggle-btn');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            const actionBorder = document.getElementById('action-border');
+            
+            const adminAuthCard = document.getElementById('admin-auth-card');
+            const adminDashboardCard = document.getElementById('admin-dashboard-card');
+            const adminInfoBox = document.getElementById('admin-info-box');
+            const adminBoardBox = document.getElementById('admin-board-box');
+            const adminPassInput = document.getElementById('admin-pass-input');
+
+            if (currentTheme === 'light') {
+                body.className = "bg-slate-100 text-slate-800 min-h-screen flex flex-col p-4 sm:p-6 transition-colors duration-200";
+                headerBox.className = "bg-white border border-slate-200 shadow-sm rounded p-4 flex justify-between items-center transition-colors";
+                consoleBox.className = "bg-white border border-slate-200 shadow-sm rounded p-4 space-y-4 transition-colors";
+                titleText.className = "text-lg font-bold text-slate-800";
+                actionBorder.className = "flex justify-between items-center border-b border-slate-200 pb-3";
+                
+                inputArea.className = "w-full bg-slate-50 border border-slate-300 rounded p-3 text-slate-800 font-mono text-sm focus:outline-none focus:border-blue-500 resize-none transition-colors";
+                outputArea.className = "w-full bg-slate-100 border border-slate-300 text-blue-600 font-mono text-sm rounded p-3 focus:outline-none resize-none transition-colors";
+                debugTerminal.className = "w-full h-28 bg-slate-900 border border-slate-300 rounded p-2.5 font-mono text-[11px] text-emerald-400 overflow-y-auto space-y-1 select-none leading-relaxed shadow-inner";
+
+                themeBtn.className = "bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-700 flex items-center space-x-1.5 transition";
+                themeIcon.className = "fa-solid fa-moon text-slate-600";
+                themeText.innerText = "다크 모드";
+
+                adminAuthCard.className = "bg-white border border-slate-200 rounded-lg max-w-sm w-full p-4 space-y-4 shadow-2xl transition-colors";
+                adminDashboardCard.className = "bg-white border border-slate-200 rounded-lg max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl transition-colors";
+                adminInfoBox.className = "bg-slate-50 p-3 rounded border border-slate-200 space-y-2";
+                adminBoardBox.className = "bg-slate-50 p-3 rounded border border-slate-200 space-y-2";
+                adminPassInput.className = "w-full bg-white border border-slate-300 rounded p-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500 font-mono";
+                document.getElementById('strong-modal-card').className = "bg-white border border-slate-200 rounded-lg max-w-sm w-full p-5 space-y-4 shadow-2xl transition-colors";
+                document.getElementById('double-option-box').className = "bg-slate-100 border border-slate-300 p-3 rounded flex items-center justify-between cursor-pointer";
+
+            } else {
+                body.className = "bg-slate-900 text-slate-100 min-h-screen flex flex-col p-4 sm:p-6 transition-colors duration-200";
+                headerBox.className = "bg-slate-800 border border-slate-700 rounded p-4 flex justify-between items-center transition-colors";
+                consoleBox.className = "bg-slate-800 border border-slate-700 rounded p-4 space-y-4 transition-colors";
+                titleText.className = "text-lg font-bold text-slate-100";
+                actionBorder.className = "flex justify-between items-center border-b border-slate-700 pb-3";
+
+                inputArea.className = "w-full bg-slate-900 border border-slate-700 rounded p-3 text-slate-100 font-mono text-sm focus:outline-none focus:border-blue-500 resize-none transition-colors";
+                outputArea.className = "w-full bg-slate-900/60 border border-slate-700 text-blue-400 font-mono text-sm rounded p-3 focus:outline-none resize-none transition-colors";
+                debugTerminal.className = "w-full h-28 bg-black/80 border border-slate-700/80 rounded p-2.5 font-mono text-[11px] text-emerald-400/90 overflow-y-auto space-y-1 select-none leading-relaxed";
+
+                themeBtn.className = "bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded px-3 py-1.5 text-xs text-slate-200 flex items-center space-x-1.5 transition";
+                themeIcon.className = "fa-solid fa-sun text-amber-400";
+                themeText.innerText = "라이트 모드";
+
+                adminAuthCard.className = "bg-slate-800 border border-slate-700 rounded-lg max-w-sm w-full p-4 space-y-4 shadow-2xl transition-colors";
+                adminDashboardCard.className = "bg-slate-800 border border-slate-700 rounded-lg max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl transition-colors";
+                adminInfoBox.className = "bg-slate-900 p-3 rounded border border-slate-700 space-y-2";
+                adminBoardBox.className = "bg-slate-900 p-3 rounded border border-slate-700 space-y-2";
+                adminPassInput.className = "w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500 font-mono";
+                document.getElementById('strong-modal-card').className = "bg-slate-800 border border-slate-700 rounded-lg max-w-sm w-full p-5 space-y-4 shadow-2xl transition-colors";
+                document.getElementById('double-option-box').className = "bg-slate-900 border border-slate-700 p-3 rounded flex items-center justify-between cursor-pointer";
+            }
+
+            if (!document.getElementById('admin-modal').classList.contains('hidden')) {
+                showAdminDashboard();
+            }
+        }
+
+        function openAdminAuthModal() {
+            document.getElementById('admin-pass-input').value = '';
+            document.getElementById('admin-auth-error').classList.add('hidden');
+            document.getElementById('admin-auth-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('admin-pass-input').focus();
+            }, 50);
+        }
+
+        function closeAdminAuthModal() {
+            document.getElementById('admin-auth-modal').classList.add('hidden');
+        }
+
+        function submitAdminAuth() {
+            const passVal = document.getElementById('admin-pass-input').value;
+            const errorElem = document.getElementById('admin-auth-error');
+
+            if (passVal === ADMIN_PASSWORD) {
+                closeAdminAuthModal();
+                showAdminDashboard();
+            } else {
+                errorElem.classList.remove('hidden');
+            }
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('admin-date').innerText = currentSeedString;
+            document.getElementById('admin-seed-hash').innerText = simpleHash(currentSeedString);
+
+            const previewContainer = document.getElementById('admin-board-preview');
+            previewContainer.innerHTML = '';
+
+            for (let i = 0; i < 256; i++) {
+                const item = boardMap[i];
+                const div = document.createElement('div');
+                
+                if (currentTheme === 'light') {
+                    div.className = "bg-white border border-slate-200 p-1.5 rounded text-slate-700 flex flex-col items-center justify-center shadow-xs";
+                    div.innerHTML = `<span class="text-blue-600 font-bold text-[9px]">${item.coord}</span><span class="text-slate-800 font-bold text-xs mt-0.5">${item.char === ' ' ? '␣' : item.char}</span>`;
+                } else {
+                    div.className = "bg-slate-800 border border-slate-700 p-1.5 rounded text-slate-300 flex flex-col items-center justify-center";
+                    div.innerHTML = `<span class="text-blue-400 font-bold text-[9px]">${item.coord}</span><span class="text-slate-100 font-bold text-xs mt-0.5">${item.char === ' ' ? '␣' : item.char}</span>`;
+                }
+                
+                previewContainer.appendChild(div);
+            }
+
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

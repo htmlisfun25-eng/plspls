@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>텍스트 스테가노그래피 암호화/해독기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col items-center justify-start p-4 sm:p-8 font-sans antialiased transition-colors duration-200">
+
+    <!-- Header & Theme Toggle -->
+    <header class="max-w-4xl w-full mb-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <i data-lucide="shield-check" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">텍스트 스테가노그래피</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">전용 비밀키 탑재 · 복사&붙여넣기로 즉시 해독</p>
+            </div>
+        </div>
+
+        <!-- Dark/Light Theme Toggle Button -->
+        <button onclick="toggleTheme()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i>
+        </button>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- ENCODE SECTION -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 text-blue-600 dark:text-blue-400">
+                    <i data-lucide="lock" class="w-5 h-5"></i>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">암호문 생성 (Encode)</h2>
+                </div>
+
+                <!-- Cover Text -->
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                        겉보기 위장 문장
+                    </label>
+                    <input type="text" id="coverText" placeholder="겉보기로 보여질 평범한 문장을 입력하세요" 
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors">
+                </div>
+
+                <!-- Secret Message -->
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                        숨길 비밀 메시지
+                    </label>
+                    <textarea id="secretMessage" rows="4" placeholder="상대방에게 전달할 진짜 비밀 내용을 입력하세요..." 
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors resize-none"></textarea>
+                </div>
+            </div>
+
+            <div>
+                <button onclick="handleEncode()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+                    암호문 생성
+                </button>
+
+                <!-- Encoded Result -->
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">생성된 위장 문장</span>
+                        <button onclick="copyToClipboard('encodedResult')" class="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> 복사
+                        </button>
+                    </div>
+                    <div id="encodedResult" class="min-h-[50px] p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-800 dark:text-slate-200 break-all select-all font-mono">
+                        <span class="text-slate-400 dark:text-slate-600 italic">생성 결과가 여기에 표시됩니다.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DECODE SECTION -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 text-blue-600 dark:text-blue-400">
+                    <i data-lucide="unlock" class="w-5 h-5"></i>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">암호문 해독 (Decode)</h2>
+                </div>
+
+                <!-- Input Ciphertext -->
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                        위장된 암호문 입력
+                    </label>
+                    <textarea id="decodeInput" rows="7" placeholder="전달받은 은닉 문장을 복사해서 붙여넣으세요..." 
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors resize-none"></textarea>
+                </div>
+            </div>
+
+            <div>
+                <button onclick="handleDecode()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                    비밀 메시지 해독
+                </button>
+
+                <!-- Decoded Result -->
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <span class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">복원된 비밀 메시지</span>
+                    <div id="decodedResult" class="min-h-[50px] p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-blue-600 dark:text-blue-400 break-all font-mono font-medium">
+                        <span class="text-slate-400 dark:text-slate-600 italic font-normal">해독된 원본 내용이 여기에 나타납니다.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Copyright -->
+    <footer class="mt-8 text-center text-xs text-slate-400 dark:text-slate-600">
+        <p>© 2026 박윤재. All rights reserved.</p>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl transition-all transform translate-y-20 opacity-0 flex items-center gap-3 text-sm font-medium">
+        <i id="toastIcon" data-lucide="info" class="w-5 h-5 text-blue-400 dark:text-blue-600"></i>
+        <span id="toastMessage">알림 메시지</span>
+    </div>
+
+    <!-- JavaScript Core -->
+    <script>
+        // 무폭 유니코드 문자 (Zero-Width Characters)
+        const ZW_ZERO = '\u200B';
+        const ZW_ONE = '\u200C';
+
+        // 전용 고정 보안키 (외부 사용자는 이 키의 존재를 모름)
+        const MASTER_KEY = "SYSTEM_SHARED_PRIVATE_SECRET_KEY_2026";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+
+        // 다크/라이트 모드 토글
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.setAttribute('data-lucide', 'sun');
+            } else {
+                html.classList.add('dark');
+                icon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        }
+
+        // 토스트 알림 표시
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = message;
+            
+            if (type === 'error') {
+                toastIcon.setAttribute('data-lucide', 'alert-circle');
+            } else if (type === 'success') {
+                toastIcon.setAttribute('data-lucide', 'check-circle-2');
+            } else {
+                toastIcon.setAttribute('data-lucide', 'info');
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // 클립보드 복사
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent.trim();
+
+            if (!text || text.includes('결과가 여기에 표시됩니다')) {
+                showToast('복사할 데이터가 없습니다.', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('클립보드에 복사되었습니다!', 'success');
+            }).catch(() => {
+                showToast('복사에 실패했습니다.', 'error');
+            });
+        }
+
+        // --- Web Crypto API (고정 암호키 기반 AES-GCM) ---
+        async function getKeyMaterial(password) {
+            const enc = new TextEncoder();
+            return window.crypto.subtle.importKey(
+                "raw",
+                enc.encode(password),
+                "PBKDF2",
+                false,
+                ["deriveBits", "deriveKey"]
+            );
+        }
+
+        async function deriveKey(password, salt) {
+            const keyMaterial = await getKeyMaterial(password);
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 50000,
+                    hash: "SHA-256"
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptText(plainText, password) {
+            const enc = new TextEncoder();
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveKey(password, salt);
+
+            const encryptedContent = await window.crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                enc.encode(plainText)
+            );
+
+            const combined = new Uint8Array(salt.length + iv.length + encryptedContent.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.length);
+            combined.set(new Uint8Array(encryptedContent), salt.length + iv.length);
+
+            return combined;
+        }
+
+        async function decryptText(combinedBuffer, password) {
+            const salt = combinedBuffer.slice(0, 16);
+            const iv = combinedBuffer.slice(16, 28);
+            const data = combinedBuffer.slice(28);
+
+            const key = await deriveKey(password, salt);
+
+            const decryptedContent = await window.crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                data
+            );
+
+            const dec = new TextDecoder();
+            return dec.decode(decryptedContent);
+        }
+
+        // --- 암호화 핸들러 ---
+        async function handleEncode() {
+            const cover = document.getElementById('coverText').value.trim();
+            const secret = document.getElementById('secretMessage').value.trim();
+
+            if (!cover || !secret) {
+                showToast('겉보기 문장과 비밀 메시지를 입력하세요.', 'error');
+                return;
+            }
+
+            try {
+                const encryptedBytes = await encryptText(secret, MASTER_KEY);
+
+                let binaryStr = '';
+                for (let byte of encryptedBytes) {
+                    binaryStr += byte.toString(2).padStart(8, '0');
+                }
+
+                let zwText = '';
+                for (let bit of binaryStr) {
+                    zwText += (bit === '0' ? ZW_ZERO : ZW_ONE);
+                }
+
+                const coverChars = Array.from(cover);
+                let result = coverChars[0] + zwText + coverChars.slice(1).join('');
+
+                document.getElementById('encodedResult').textContent = result;
+                document.getElementById('decodeInput').value = result;
+
+                showToast('암호문 생성 완료!', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('암호화 실패', 'error');
+            }
+        }
+
+        // --- 해독 핸들러 ---
+        async function handleDecode() {
+            const input = document.getElementById('decodeInput').value;
+
+            if (!input) {
+                showToast('해독할 암호문 문장을 입력하세요.', 'error');
+                return;
+            }
+
+            try {
+                let binaryStr = '';
+                for (let char of input) {
+                    if (char === ZW_ZERO) {
+                        binaryStr += '0';
+                    } else if (char === ZW_ONE) {
+                        binaryStr += '1';
+                    }
+                }
+
+                if (binaryStr.length === 0) {
+                    showToast('숨겨진 암호를 찾을 수 없습니다.', 'error');
+                    return;
+                }
+
+                const bytes = [];
+                for (let i = 0; i < binaryStr.length; i += 8) {
+                    const chunk = binaryStr.slice(i, i + 8);
+                    if (chunk.length === 8) {
+                        bytes.push(parseInt(chunk, 2));
+                    }
+                }
+                const encryptedBytes = new Uint8Array(bytes);
+
+                const decryptedSecret = await decryptText(encryptedBytes, MASTER_KEY);
+                document.getElementById('decodedResult').textContent = decryptedSecret;
+
+                showToast('비밀 메시지 해독 완료!', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('해독 실패: 유효하지 않은 암호문입니다.', 'error');
+                document.getElementById('decodedResult').textContent = "❌ 해독 실패";
+            }
+        }
+    </script>
+</body>
+</html>
